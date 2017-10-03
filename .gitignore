@@ -1,0 +1,7 @@
+.sign/
+.settings/
+.project
+*.info
+config.xml
+*.tproject
+*.wgt
