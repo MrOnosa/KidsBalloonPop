@@ -5,3 +5,4 @@
 config.xml
 *.tproject
 *.wgt
+.rds_delta
