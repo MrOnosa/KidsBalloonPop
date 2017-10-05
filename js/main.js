@@ -22,6 +22,7 @@ window.onload = function () {
     document.body.addEventListener('click', function click(){
     	document.body.innerHTML = '';
     	new p5(sketch);}, true);
+	new p5(sketch);
     
 };
 
@@ -34,7 +35,7 @@ var sketch = function(p) {
 	  var current;
 
 	  p.setup = function() {
-	    p.createCanvas(640, 480);
+	    p.createCanvas(360, 360);
 	    p.background("#ffface");
 	    p.noStroke();
 	    p.colorMode(p.HSB);
@@ -43,10 +44,10 @@ var sketch = function(p) {
 	  }
 
 	  p.draw = function() {
-	    for (var h = -100; h < p.height; h+=300) {
+	    for (var h = -10; h < p.height; h+=30) {
 	      init(h);
 	      p.fill(p.random(360),100,80, .01);
-	      for (var i = 0; i < 35; i++) {
+	      for (var i = 0; i < 5; i++) {
 	        current = update();
 	        display();
 	      }
@@ -115,4 +116,3 @@ var sketch = function(p) {
 	  }
 	}
 
-	new p5(sketch);
