@@ -19,13 +19,16 @@ window.onload = function () {
     //	box.innerHTML = (box.innerHTML === "Basic") ? "Sample" : "Basic";
     //});
     
-    document.body.addEventListener('click', function click(){
-    	document.body.innerHTML = '';
-    	new p5(sketch);}, true);
-	new p5(sketch);
+    //document.body.addEventListener('click', function click(){
+    	//document.body.innerHTML = '';
+    	//new p5(sketch);}, true);
+	//new p5(sketch);
+
     
 };
 
+
+/*
 var sketch = function(p) {
 	  var initial_size = 2;
 	  var initial_deviation = 300;
@@ -115,4 +118,5 @@ var sketch = function(p) {
 	    }
 	  }
 	}
+	*/
 
