@@ -15,8 +15,29 @@ window.onload = function () {
 	});    
 };
 
+//Aliases
+var Container = PIXI.Container,
+autoDetectRenderer = PIXI.autoDetectRenderer,
+canvasRenderer = PIXI.CanvasRenderer,
+loader = PIXI.loader,
+resources = PIXI.loader.resources,
+Sprite = PIXI.Sprite;
 
+var stage = new Container(),
+renderer = new canvasRenderer(360,360);
+document.body.appendChild(renderer.view);
+loader
+.add([{name: "cat",url: "./images/cat.png", crossOrigin: ''}])
+.load(setup);
 
+function setup() {
+	
+		//Create the `cat` sprite, add it to the stage, and render it
+		var cat = new Sprite(resources.cat.texture);  
+		stage.addChild(cat);
+		renderer.render(stage);
+	}
+/*
 var renderer = new PIXI.CanvasRenderer(360,360);
 //var renderer = new PIXI.WebGLRenderer(256, 256);
 
@@ -56,3 +77,4 @@ function loop() {
 }
 
 loop();
+*/
