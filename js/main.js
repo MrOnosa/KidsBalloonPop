@@ -34,6 +34,8 @@ loader
 
 //Define any variables that are used in more than one function
 var state, drawables;
+var balloonHeight = 141;
+var balloonWidth = 123;
 drawables = [];
 function setup() {
   var circle = new PIXI.Graphics();
@@ -42,26 +44,25 @@ function setup() {
   circle.drawCircle(180, 180, 183);
   circle.endFill();
   stage.addChild(circle);
-    
-  
-  //Create the `cat` sprite 
+      
   var texture = PIXI.TextureCache["./images/frame_0_delay-0.1s.png"];
-  texture.frame = new PIXI.Rectangle(84, 62, 123, 141);
+  texture.frame = new PIXI.Rectangle(84, 62, balloonWidth, balloonHeight);
   for(i = 0; i < 4; i++)
   {
     var sprite = new Sprite(texture);
-    sprite.x = Math.random()*360; 
-    sprite.y =Math.random()*360; 
+    sprite.x = Math.random()*(360) - (balloonWidth/2); 
+    sprite.y = Math.random()*360; 
     sprite.vx = 0;
-    sprite.vy = 0;
+    sprite.vy = -1;
     sprite.interactive = true;
     sprite.on('pointerdown', onClick);
-  // stage.addChild(cat);
-  drawables.push(sprite);
+    drawables.push(sprite);
   }
+
   drawables.forEach(function(drawable){
     stage.addChild(drawable);
   });
+
   //Set the game state
   state = play;
 
@@ -71,10 +72,8 @@ function setup() {
 
 function onClick (s) {
   s.currentTarget.visible = false;
+  s.currentTarget.y = Math.random()*180 - 180; 
   var i = drawables.indexOf(s.currentTarget);
-  if(i != -1) {
-    drawables.splice(i, 1);
-  }
 }
 
 function gameLoop(){
@@ -90,9 +89,16 @@ function gameLoop(){
 }
 
 function play() {
+  drawables.forEach(function(drawable){
+    drawable.x += drawable.vx;
+    drawable.y += drawable.vy;
 
-  //Move the cat 1 pixel to the right each frame
-  //cat.x += cat.vx;
-  //cat.y += cat.vy;
-  
+    if(drawable.y < -balloonHeight)
+    {
+      drawable.visible = true;
+      drawable.y = 365;
+      drawable.x = Math.random()*(360) - (balloonWidth/2); 
+    }
+  });
+ 
 }
