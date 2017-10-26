@@ -36,6 +36,7 @@ loader
 var state, drawables;
 var balloonHeight = 141;
 var balloonWidth = 123;
+var balloonFrame = new PIXI.Rectangle(84, 62, balloonWidth, balloonHeight);
 drawables = [];
 function setup() {
   var circle = new PIXI.Graphics();
@@ -46,12 +47,12 @@ function setup() {
   stage.addChild(circle);
       
   var texture = PIXI.TextureCache["./images/frame_0_delay-0.1s.png"];
-  texture.frame = new PIXI.Rectangle(84, 62, balloonWidth, balloonHeight);
+  texture.frame = balloonFrame;
   for(i = 0; i < 4; i++)
   {
     var sprite = new Sprite(texture);
-    sprite.x = Math.random()*(360) - (balloonWidth/2); 
-    sprite.y = Math.random()*360; 
+    sprite.x = Math.random()*360 - (balloonWidth/2); 
+    sprite.y = Math.random()*365; 
     sprite.vx = 0;
     sprite.vy = -1;
     sprite.interactive = true;
@@ -72,7 +73,8 @@ function setup() {
 
 function onClick (s) {
   s.currentTarget.visible = false;
-  s.currentTarget.y = Math.random()*180 - 180; 
+  //s.currentTarget.vy = 0;
+  s.currentTarget.y = Math.random()*180 ; 
   var i = drawables.indexOf(s.currentTarget);
 }
 
@@ -96,8 +98,8 @@ function play() {
     if(drawable.y < -balloonHeight)
     {
       drawable.visible = true;
-      drawable.y = 365;
-      drawable.x = Math.random()*(360) - (balloonWidth/2); 
+      drawable.y =  365;
+      drawable.x =  Math.random()*360 - (balloonWidth/2); 
     }
   });
  
