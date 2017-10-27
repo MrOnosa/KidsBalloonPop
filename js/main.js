@@ -54,7 +54,7 @@ function setup() {
     sprite.x = Math.random()*360 - (balloonWidth/2); 
     sprite.y = Math.random()*365; 
     sprite.vx = 0;
-    sprite.vy = -1;
+    sprite.vy = -10;
     sprite.interactive = true;
     sprite.on('pointerdown', onClick);
     drawables.push(sprite);
