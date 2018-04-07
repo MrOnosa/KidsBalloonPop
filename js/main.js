@@ -24,6 +24,15 @@ PIXI.loader.add([{url: "./images/frame_0_delay-0.1s.png"},
 
 //Define any variables that are used in more than one function
 var balloons = [];
+var balloonImages = [
+  "./images/frame_0_delay-0.1s.png",
+  "./images/frame_1_delay-0.1s.png",
+  "./images/frame_2_delay-0.1s.png",
+  "./images/frame_3_delay-0.1s.png",
+  "./images/frame_4_delay-0.1s.png",
+  "./images/frame_5_delay-0.1s.png",
+  "./images/frame_6_delay-0.1s.png"];
+var textureArray = [];
 var balloonHeight = 141;
 var balloonWidth = 123;
 var balloonFrame = new PIXI.Rectangle(84, 62, balloonWidth, balloonHeight);
@@ -35,7 +44,14 @@ function setup() {
   circle.drawCircle(180, 180, 183);
   circle.endFill();
   //app.stage.addChild(circle);
-  for(i = 0; i < 4; i++)
+
+  for (var i=0; i < balloonImages.length; i++)
+  {
+       texture = PIXI.Texture.fromImage(balloonImages[i]);
+       textureArray.push(texture);
+  };
+
+  for(i = 0; i < 6; i++)
   {
     var balloon = window.balloon();
     balloons.push(balloon);
@@ -54,39 +70,28 @@ function play(delta) {
     balloon.sprite.x += delta * balloon.sprite.vx;
     balloon.sprite.y += delta * balloon.sprite.vy;
 
-    if(balloon.sprite.y < -balloonHeight) {
+    if(balloon.sprite.y + balloonFrame.y < -balloonHeight &&
+      //If the balloon is in the middle of the popping animation, wait for it to
+       balloon.popped === false 
+      ) {
       balloon.sprite.visible = true;
       balloon.sprite.interactive = true;
-      balloon.sprite.y =  365;
-      balloon.sprite.x =  Math.random()*360 - (balloonWidth/2); 
-      if(balloon.popped){
-        balloon.timeSincePopped = 999999;
-      }
-    }
-
-    if(balloon.popped) {
-      balloon.timeSincePopped += delta * 20;
-      var frame = Math.floor( balloon.timeSincePopped / 100);
-      if(frame > 6)
-      { 
-        balloon.resetBalloon();
-      } else {
-        balloon.sprite.texture = PIXI.TextureCache["./images/frame_"+frame+"_delay-0.1s.png"];
-      }
+      balloon.sprite.y = 365;
+      balloon.sprite.x = Math.random()*360 - (balloonFrame.x + balloonWidth/2); 
     }
   }); 
 }
 
 function balloon() {    
-  function onClick () {
+  function onClick (e) {
+    //console.log(e.data.global);
+    //TODO: Check if click on ellipse
     if(that.popped === false)
     {
       that.sprite.vy = -0.5;
       that.popped = true;
-      that.timeSincePopped = 100;//Will be modding by 100 to get keyframe
-      that.sprite.x -= 84;
-      that.sprite.y -= 62;
       that.sprite.interactive = false;
+      sprite.gotoAndPlay(1);
     }
   }
 
@@ -95,26 +100,25 @@ function balloon() {
     that.sprite.vy = -1.5;
     that.sprite.y -= Math.random()*180 + 180; 
     that.popped = false;
-    that.timeSincePopped = 0;
-    that.sprite.texture = PIXI.TextureCache["./images/frame_0_delay-0.1s.png"];
-    that.sprite.texture.frame = balloonFrame;
+    that.sprite.gotoAndStop(0);
   }
 
-  var texture = PIXI.TextureCache["./images/frame_0_delay-0.1s.png"];
-  texture.frame = balloonFrame;
-  var sprite = new PIXI.Sprite(texture);
-  sprite.x = Math.random()*360 - (balloonWidth/2); 
+  var sprite = new PIXI.extras.AnimatedSprite(textureArray);
+  sprite.x = Math.random()*360 - (balloonFrame.x + balloonWidth/2); 
   sprite.y = Math.random()*365; 
   sprite.vx = 0;
   sprite.vy = -1.5;
   sprite.interactive = true;
   sprite.on('pointerdown', onClick);
+  sprite.hitArea = balloonFrame;
+  sprite.animationSpeed = 0.3;
+  sprite.gotoAndStop(0);
+  sprite.onLoop = resetBalloon;
   
   var that = {
     sprite: sprite,
     popped: false,
-    timeSincePopped: 0,
-    resetBalloon: resetBalloon
+    timeSincePopped: 0
   };  
   return that;
 }
