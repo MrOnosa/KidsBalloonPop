@@ -1,6 +1,5 @@
-
 window.onload = function () {
-    // add eventListener for tizenhwkey
+    // add eventListener for tizen specific events
     document.addEventListener('tizenhwkey', function(e) {
         if(e.keyName === "back") {
 			try {
@@ -8,7 +7,13 @@ window.onload = function () {
 			} catch (ignore) {
 			}
 		}
-	});    
+  });   
+  
+  document.addEventListener("rotarydetent", function(ev)
+  {
+    var direction = ev.detail.direction;
+    sway(direction == "CCW"); //Turned counter-clockwise
+  });
 };
 
 var app = new PIXI.Application(360, 360, {backgroundColor : 0xF0F0F0, forceCanvas: true});
@@ -35,7 +40,10 @@ var balloonImages = [
 var textureArray = [];
 var balloonHeight = 141;
 var balloonWidth = 123;
+var balloonCenter = {x: 112/2, y: 122/2};
 var balloonFrame = new PIXI.Rectangle(84, 62, balloonWidth, balloonHeight);
+var balloonHitArea = new PIXI.Ellipse(balloonFrame.x + balloonCenter.x, balloonFrame.y + balloonCenter.y, balloonCenter.x, balloonCenter.y);
+var wind = 0;
 
 function setup() {
   var circle = new PIXI.Graphics();
@@ -57,12 +65,19 @@ function setup() {
     balloons.push(balloon);
   }
 
-  balloons.forEach(function(drawable){
-    app.stage.addChild(drawable.sprite);
+  balloons.forEach(function(balloon){
+    app.stage.addChild(balloon.sprite);
   });
 
   //Start the game loop
   app.ticker.add(play);
+}
+
+function sway(left){
+  wind = Math.max(Math.min(wind + (left ? -0.3 : 0.3), 1), -1);
+  balloons.forEach(function(balloon){
+    balloon.sprite.vx = wind/2 + Math.random() * wind;
+  });
 }
 
 function play(delta) {
@@ -84,8 +99,6 @@ function play(delta) {
 
 function balloon() {    
   function onClick (e) {
-    //console.log(e.data.global);
-    //TODO: Check if click on ellipse
     if(that.popped === false)
     {
       that.sprite.vy = -0.5;
@@ -106,12 +119,13 @@ function balloon() {
   var sprite = new PIXI.extras.AnimatedSprite(textureArray);
   sprite.x = Math.random()*360 - (balloonFrame.x + balloonWidth/2); 
   sprite.y = Math.random()*365; 
-  sprite.vx = 0;
+  var wind = Math.random() * 0.3 - 0.15;
+  sprite.vx = wind/2 + Math.random() * wind;
   sprite.vy = -1.5;
   sprite.interactive = true;
   sprite.on('pointerdown', onClick);
-  sprite.hitArea = balloonFrame;
-  sprite.animationSpeed = 0.3;
+  sprite.hitArea = balloonHitArea;
+  sprite.animationSpeed = Math.random() * 0.1 + 0.25;
   sprite.gotoAndStop(0);
   sprite.onLoop = resetBalloon;
   
