@@ -38,12 +38,15 @@ var balloonImages = [
   "./images/frame_4_delay-0.1s.png",
   "./images/frame_5_delay-0.1s.png",
   "./images/frame_6_delay-0.1s.png"];
+var far;
+var backgroundUrl = "./images/bluebackground.png";
 var textureArray = [];
 var balloonHeight = 141;
 var balloonWidth = 123;
 var balloonCenter = {x: 112/2, y: 122/2};
 var balloonFrame = new PIXI.Rectangle(84, 62, balloonWidth, balloonHeight);
 var balloonHitArea = new PIXI.Ellipse(balloonFrame.x + balloonCenter.x, balloonFrame.y + balloonCenter.y, balloonCenter.x, balloonCenter.y);
+
 
 //static variables
 var wind = 0;
@@ -56,7 +59,8 @@ PIXI.loader.add([{url: balloonImages[0]},
                  {url: balloonImages[3]},
                  {url: balloonImages[4]},
                  {url: balloonImages[5]},
-                 {url: balloonImages[6]}])
+                 {url: balloonImages[6]},
+                {url: backgroundUrl}])
       .load(setup);
 
 function setup() {
@@ -66,6 +70,14 @@ function setup() {
   circle.drawCircle(180, 180, 183);
   circle.endFill();
   //app.stage.addChild(circle);
+  
+  var farTexture = PIXI.Texture.fromImage(backgroundUrl);
+  far = new PIXI.TilingSprite(farTexture,250,250);
+  far.width = canvas.width;
+  far.height = canvas.height;
+  far.position.x = 0;
+  far.position.y = 0;
+  app.stage.addChild(far);
 
   for (var i=0; i < balloonImages.length; i++)
   {
@@ -92,6 +104,8 @@ function sway(left){
 }
 
 function play(delta) {
+  far.tilePosition.y -= delta * 0.128;
+  far.tilePosition.x -= delta * wind;
   balloons.forEach(function(balloon){
     balloon.sprite.x += delta * balloon.sprite.vx;
     balloon.sprite.y += delta * balloon.sprite.vy;
