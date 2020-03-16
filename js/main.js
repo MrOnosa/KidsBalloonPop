@@ -146,11 +146,16 @@ function play(delta) {
     }
   }); 
 
-  birds.forEach(function(bird){
+  for(var i = 0; i < birds.length; i++){
+    var bird = birds[i];
     bird.sprite.x += delta * bird.sprite.vx;
     bird.sprite.y += delta * bird.sprite.vy;
-    //Todo: Despawn
-  }); 
+    if(bird.sprite.y < -bird.sprite.height){
+      app.stage.removeChild(bird);
+      birds.splice(i, 1);
+      i--;
+    }
+  }
 }
 
 function balloon() {    
