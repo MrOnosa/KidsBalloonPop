@@ -27,9 +27,19 @@ window.onload = function () {
 };
 
 //static constants
-var canvas = {width: 1920, height: 1080};
-var totalBalloons = 30;
+var canvas = {width: 360, height: 360};
+if(window.innerWidth > canvas.width){
+  canvas.width = window.innerWidth;
+}
+if(window.innerHeight > canvas.height){
+  canvas.height = window.innerHeight;
+}
+var totalBalloons = Math.floor((canvas.width * canvas.height) / 69120);
+if(totalBalloons < 6){
+  totalBalloons = 6;
+}
 var balloons = [];
+var birds = [];
 var balloonImages = [
   "./images/frame_0_delay-0.1s.png",
   "./images/frame_1_delay-0.1s.png",
@@ -38,15 +48,20 @@ var balloonImages = [
   "./images/frame_4_delay-0.1s.png",
   "./images/frame_5_delay-0.1s.png",
   "./images/frame_6_delay-0.1s.png"];
+var birdImages = [
+    "./images/birds1.png",
+    "./images/birds2.png"];
 var far;
 var backgroundUrl = "./images/bluebackground.png";
-var textureArray = [];
+var birdsUrl = "./images/birds.svg";
+var balloonTextureArray = [];
 var balloonHeight = 141;
 var balloonWidth = 123;
 var balloonCenter = {x: 112/2, y: 122/2};
 var balloonFrame = new PIXI.Rectangle(84, 62, balloonWidth, balloonHeight);
 var balloonHitArea = new PIXI.Ellipse(balloonFrame.x + balloonCenter.x, balloonFrame.y + balloonCenter.y, balloonCenter.x, balloonCenter.y);
 
+var birdTextureArray = [];
 
 //static variables
 var wind = 0;
@@ -60,7 +75,9 @@ PIXI.loader.add([{url: balloonImages[0]},
                  {url: balloonImages[4]},
                  {url: balloonImages[5]},
                  {url: balloonImages[6]},
-                {url: backgroundUrl}])
+                {url: backgroundUrl},
+              {url: birdImages[0]},
+              {url: birdImages[1]}])
       .load(setup);
 
 function setup() {
@@ -81,8 +98,14 @@ function setup() {
 
   for (var i=0; i < balloonImages.length; i++)
   {
-       texture = PIXI.Texture.fromImage(balloonImages[i]);
-       textureArray.push(texture);
+       var texture = PIXI.Texture.fromImage(balloonImages[i]);
+       balloonTextureArray.push(texture);
+  }
+
+  for (var i=0; i < birdImages.length; i++)
+  {
+       var texture = PIXI.Texture.fromImage(birdImages[i]);
+       birdTextureArray.push(texture);
   }
 
   for(i = 0; i < totalBalloons; i++)
@@ -90,6 +113,8 @@ function setup() {
     var balloon = window.balloon();
     balloons.push(balloon);
     app.stage.addChild(balloon.sprite);
+    birds.push()
+
   }
 
   //Start the game loop
@@ -120,6 +145,12 @@ function play(delta) {
       balloon.sprite.x = Math.random()*canvas.width - (balloonFrame.x + balloonWidth/2); 
     }
   }); 
+
+  birds.forEach(function(bird){
+    bird.sprite.x += delta * bird.sprite.vx;
+    bird.sprite.y += delta * bird.sprite.vy;
+    //Todo: Despawn
+  }); 
 }
 
 function balloon() {    
@@ -130,6 +161,15 @@ function balloon() {
       that.popped = true;
       that.sprite.interactive = false;
       sprite.gotoAndPlay(1);
+
+      if(Math.random() < (1/6))
+      {
+        var bird = window.bird(that.sprite);
+        birds.push(bird)
+        var index = app.stage.getChildIndex(sprite);
+        if(index !== 0){index--;}
+        app.stage.addChildAt(bird.sprite, index);
+      }
     }
   }
 
@@ -141,7 +181,7 @@ function balloon() {
     that.sprite.gotoAndStop(0);
   }
 
-  var sprite = new PIXI.extras.AnimatedSprite(textureArray);
+  var sprite = new PIXI.extras.AnimatedSprite(balloonTextureArray);
   sprite.x = Math.random() * canvas.width - (balloonFrame.x + balloonWidth/2); 
   sprite.y = Math.random() * (canvas.height + 5); 
   var wind = Math.random() * 0.3 - 0.15;
@@ -157,6 +197,37 @@ function balloon() {
   var that = {
     sprite: sprite,
     popped: false
+  };  
+  return that;
+}
+
+function bird(referenceSprite) {    
+  function onClick (e) {
+    that.direction += Math.random() * 90 + 25;
+  }
+
+  function reset () {
+    that.sprite.visible = false;
+    that.direction = 45;
+    that.sprite.gotoAndStop(0);
+  }
+
+  var birdSprite = new PIXI.extras.AnimatedSprite(birdTextureArray);
+  birdSprite.x =  referenceSprite.x + balloonWidth/2; 
+  birdSprite.y =  referenceSprite.y + balloonHeight/2; 
+  birdSprite.vx = 3;
+  birdSprite.vy = -4;
+  birdSprite.interactive = false;
+  birdSprite.on('pointerdown', onClick);
+  birdSprite.play();
+  //birdSprite.hitArea = balloonHitArea;
+  birdSprite.animationSpeed = 0.18;
+  //birdSprite.gotoAndStop(0);
+  //birdSprite.onLoop = resetBalloon;
+  
+  var that = {
+    sprite: birdSprite,
+    direction: 45 
   };  
   return that;
 }

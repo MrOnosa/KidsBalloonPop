@@ -4,3 +4,5 @@ A simple balloon popping game. Click the balloons. Press the left or right arrow
 [Check it out](https://mronosa.github.io/KidsBalloonPop/index.html)  
 
 [](/fritballoon)
+
+Birds provided by [LeeZH from OpenGameArt.org](https://opengameart.org/content/white-birds).
