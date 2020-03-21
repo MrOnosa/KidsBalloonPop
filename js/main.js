@@ -40,6 +40,7 @@ if(totalBalloons < 6){
 }
 var balloons = [];
 var birds = [];
+var thomases = [];
 var balloonImages = [
   "./images/frame_0_delay-0.1s.png",
   "./images/frame_1_delay-0.1s.png",
@@ -50,10 +51,12 @@ var balloonImages = [
   "./images/frame_6_delay-0.1s.png"];
 var birdImages = [
     "./images/birds1.png",
-    "./images/birds2.png"];
+    "./images/birds2.png"];  
+var thomasImages = [
+    "./images/thomas1.png",
+    "./images/thomas2.png"];
 var far;
 var backgroundUrl = "./images/bluebackground.png";
-var birdsUrl = "./images/birds.svg";
 var balloonTextureArray = [];
 var balloonHeight = 141;
 var balloonWidth = 123;
@@ -62,6 +65,7 @@ var balloonFrame = new PIXI.Rectangle(84, 62, balloonWidth, balloonHeight);
 var balloonHitArea = new PIXI.Ellipse(balloonFrame.x + balloonCenter.x, balloonFrame.y + balloonCenter.y, balloonCenter.x, balloonCenter.y);
 
 var birdTextureArray = [];
+var thomasTextureArray = [];
 
 //static variables
 var wind = 0;
@@ -77,7 +81,10 @@ PIXI.loader.add([{url: balloonImages[0]},
                  {url: balloonImages[6]},
                 {url: backgroundUrl},
               {url: birdImages[0]},
-              {url: birdImages[1]}])
+              {url: birdImages[1]},
+              {url: thomasImages[0]},
+              {url: thomasImages[1]},
+            ])
       .load(setup);
 
 function setup() {
@@ -108,13 +115,17 @@ function setup() {
        birdTextureArray.push(texture);
   }
 
+  for (var i=0; i < thomasImages.length; i++)
+  {
+       var texture = PIXI.Texture.fromImage(thomasImages[i]);
+       thomasTextureArray.push(texture);
+  }
+
   for(i = 0; i < totalBalloons; i++)
   {
     var balloon = window.balloon();
     balloons.push(balloon);
     app.stage.addChild(balloon.sprite);
-    birds.push()
-
   }
 
   //Start the game loop
@@ -156,6 +167,17 @@ function play(delta) {
       i--;
     }
   }
+
+  for(var i = 0; i < thomases.length; i++){
+    var thomas = thomases[i];
+    thomas.sprite.x += delta * thomas.sprite.vx;
+    thomas.sprite.y += delta * thomas.sprite.vy;
+    if(thomas.sprite.y < -thomas.sprite.height){
+      app.stage.removeChild(thomas);
+      thomases.splice(i, 1);
+      i--;
+    }
+  }
 }
 
 function balloon() {    
@@ -172,8 +194,15 @@ function balloon() {
         var bird = window.bird(that.sprite);
         birds.push(bird)
         var index = app.stage.getChildIndex(sprite);
-        if(index !== 0){index--;}
         app.stage.addChildAt(bird.sprite, index);
+      }
+
+      if(Math.random() < (1/8))
+      {
+        var thomas = window.thomas(that.sprite);
+        thomases.push(thomas)
+        var index = app.stage.getChildIndex(sprite);
+        app.stage.addChildAt(thomas.sprite, index);
       }
     }
   }
@@ -206,33 +235,44 @@ function balloon() {
   return that;
 }
 
-function bird(referenceSprite) {    
-  function onClick (e) {
-    that.direction += Math.random() * 90 + 25;
+function thomas(referenceSprite) {    
+  var sprite = new PIXI.extras.AnimatedSprite(thomasTextureArray);
+  sprite.anchor.y = 0.5;
+  sprite.anchor.x = 0.5;
+  sprite.x =  referenceSprite.x + referenceSprite.width/2; 
+  sprite.y =  referenceSprite.y + referenceSprite.height/2; 
+  sprite.vx = Math.random() * 4 - 2;
+  if(sprite.vx < 0) {
+    sprite.scale.x = -1;
   }
-
-  function reset () {
-    that.sprite.visible = false;
-    that.direction = 45;
-    that.sprite.gotoAndStop(0);
-  }
-
-  var birdSprite = new PIXI.extras.AnimatedSprite(birdTextureArray);
-  birdSprite.x =  referenceSprite.x + balloonWidth/2; 
-  birdSprite.y =  referenceSprite.y + balloonHeight/2; 
-  birdSprite.vx = 3;
-  birdSprite.vy = -4;
-  birdSprite.interactive = false;
-  birdSprite.on('pointerdown', onClick);
-  birdSprite.play();
-  //birdSprite.hitArea = balloonHitArea;
-  birdSprite.animationSpeed = 0.18;
-  //birdSprite.gotoAndStop(0);
-  //birdSprite.onLoop = resetBalloon;
+  sprite.vy = -3.5;
+  sprite.interactive = false;
+  sprite.play();
+  sprite.animationSpeed = 0.18;
   
   var that = {
-    sprite: birdSprite,
-    direction: 45 
+    sprite: sprite
+  };  
+  return that;
+}
+
+function bird(referenceSprite) {  
+  var sprite = new PIXI.extras.AnimatedSprite(birdTextureArray);
+  sprite.anchor.y = 0.5;
+  sprite.anchor.x = 0.5;
+  sprite.x =  referenceSprite.x + referenceSprite.width/2; 
+  sprite.y =  referenceSprite.y + referenceSprite.height/2; 
+  sprite.vx = (Math.random() > 0.5 ? -1 : 1) * 3;
+  if(sprite.vx < 0) {
+    sprite.scale.x = -1;
+  }
+  sprite.vy = -4;
+  sprite.interactive = false;
+  sprite.play();
+  sprite.animationSpeed = 0.18;
+  
+  var that = {
+    sprite: sprite
   };  
   return that;
 }
