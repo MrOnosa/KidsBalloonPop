@@ -2,30 +2,45 @@
  * PIXI.JS GAME
  */
 
+PIXI.settings.RESOLUTION = window.devicePixelRatio;
 PIXI.settings.SORTABLE_CHILDREN = true;
 
-// static constants
 var balloons = [];
-var birds = [];
-var thomases = [];
+var flyingObjects = [];
 var balloonImages = [
-  "./images/frame_0_delay-0.1s.png",
-  "./images/frame_1_delay-0.1s.png",
-  "./images/frame_2_delay-0.1s.png",
-  "./images/frame_3_delay-0.1s.png",
-  "./images/frame_4_delay-0.1s.png",
-  "./images/frame_5_delay-0.1s.png",
-  "./images/frame_6_delay-0.1s.png"
+  "./images/animations/balloon/frame_0_delay-0.1s.png",
+  "./images/animations/balloon/frame_1_delay-0.1s.png",
+  "./images/animations/balloon/frame_2_delay-0.1s.png",
+  "./images/animations/balloon/frame_3_delay-0.1s.png",
+  "./images/animations/balloon/frame_4_delay-0.1s.png",
+  "./images/animations/balloon/frame_5_delay-0.1s.png",
+  "./images/animations/balloon/frame_6_delay-0.1s.png"
 ];
 var birdImages = [
-  "./images/birds1.png",
-  "./images/birds2.png"
+  "./images/animations/birds1.png",
+  "./images/animations/birds2.png"
 ];
 var thomasImages = [
-  "./images/thomas1.png",
-  "./images/thomas2.png"
+  "./images/animations/thomas1.png",
+  "./images/animations/thomas2.png"
 ];
-var far, scoreboard;
+var cscrocImages = [
+  "./images/animations/cscroc/frame_0_delay-0.02s.png",
+  "./images/animations/cscroc/frame_1_delay-0.02s.png",
+  "./images/animations/cscroc/frame_2_delay-0.02s.png",
+  "./images/animations/cscroc/frame_3_delay-0.02s.png",
+  "./images/animations/cscroc/frame_4_delay-0.02s.png",
+  "./images/animations/cscroc/frame_5_delay-0.02s.png",
+  "./images/animations/cscroc/frame_6_delay-0.02s.png",
+  "./images/animations/cscroc/frame_7_delay-0.02s.png",
+  "./images/animations/cscroc/frame_8_delay-0.02s.png"
+];
+var icons = [
+  "./images/icons/heart.png",
+  "./images/icons/cart.png",
+  "./images/icons/plus.png"
+];
+var far, scoreboard, shopbutton, shopcontainer, shopbg, shopitems, shopclose;
 var backgroundUrl = "./images/bluebackground.png";
 var balloonTextureArray = [];
 var balloonHeight = 141;
@@ -36,12 +51,24 @@ var balloonHitArea = new PIXI.Ellipse(balloonFrame.x + balloonCenter.x, balloonF
 
 var birdTextureArray = [];
 var thomasTextureArray = [];
+var cscrocTextureArray = [];
 
 // global variables
 var wind = 0;
 var score = 0;
+var powers = {
+  Crocnosa: false,
+};
 
-var app = new PIXI.Application({ resizeTo: window, backgroundColor: 0xF0F0F0 });
+var app = new PIXI.Application({
+  sharedLoader: true,
+  width: window.innerWidth,
+  height: window.innerHeight,
+  autoDensity: true,
+  antialias: true,
+  resizeTo: window,
+  backgroundColor: 0xF0F0F0
+});
 document.body.appendChild(app.view);
 
 PIXI.Loader.shared
@@ -49,12 +76,256 @@ PIXI.Loader.shared
   .add(backgroundUrl)
   .add(birdImages)
   .add(thomasImages)
+  .add(icons)
+  .add(cscrocImages)
   .load(setup);
 
+function balloon() {
+  function onClick(e) {
+    if (shopcontainer.visible) return;  // Do nothing while shop is open
+    if (that.popped === false) {
+      that.sprite.vy = -0.8;
+      that.popped = true;
+      that.sprite.interactive = false;
+      sprite.gotoAndPlay(1);
+      score += 1;
+
+      if (Math.random() < (1 / 6)) {
+        var b = bird(that.sprite);
+        flyingObjects.push(b)
+        app.stage.addChildAt(b.sprite, app.stage.getChildIndex(sprite));
+        score += 1;
+      }
+      if (Math.random() < (1 / 8)) {
+        var t = thomas(that.sprite);
+        flyingObjects.push(t);
+        app.stage.addChildAt(t.sprite, app.stage.getChildIndex(sprite));
+        score += 3;
+      }
+      if (powers.Crocnosa && Math.random() < (1 / 6)) {
+        var t = cscroc(that.sprite);
+        flyingObjects.push(t);
+        app.stage.addChildAt(t.sprite, app.stage.getChildIndex(sprite));
+        score += 15;
+      }
+      setScore();
+    }
+  }
+
+  function resetBalloon() {
+    that.sprite.visible = false;
+    that.sprite.vy = -0.8;
+    that.rotation = Math.atan(-that.vx / that.vy);
+    that.sprite.y -= Math.random() * (app.screen.height / 2) + (app.screen.height / 2);
+    that.popped = false;
+    that.sprite.gotoAndStop(0);
+  }
+
+  var sprite = new PIXI.AnimatedSprite(balloonTextureArray);
+  sprite.x = Math.random() * app.screen.width - (balloonFrame.x + balloonWidth / 2);
+  sprite.y = Math.random() * (app.screen.height + 5);
+  var wind = Math.random() * 0.3 - 0.15;
+  sprite.vx = wind / 2 + Math.random() * wind; // wut
+  sprite.vy = -0.8;
+  sprite.rotation = Math.atan(-sprite.vx / sprite.vy); // orient the balloon to where it's heading
+  sprite.interactive = true;
+  sprite.on('pointerdown', onClick);
+  sprite.hitArea = balloonHitArea;
+  sprite.animationSpeed = Math.random() * 0.1 + 0.25;
+  sprite.gotoAndStop(0);
+  sprite.onLoop = resetBalloon;
+
+  var that = {
+    sprite: sprite,
+    popped: false
+  };
+  return that;
+}
+
+function thomas(referenceSprite) {
+  var sprite = new PIXI.AnimatedSprite(thomasTextureArray);
+  sprite.anchor.set(0.5);
+  sprite.x = referenceSprite.x + referenceSprite.width / 2;
+  sprite.y = referenceSprite.y + referenceSprite.height / 2;
+  sprite.vx = Math.random() * 4 - 2;
+  if (sprite.vx < 0) {
+    sprite.scale.x = -1;
+  }
+  sprite.vy = -1.5;
+  sprite.interactive = false;
+  sprite.play();
+  sprite.animationSpeed = 0.18;
+
+  return {
+    sprite: sprite
+  };
+}
+
+function cscroc(referenceSprite) {
+  var sprite = new PIXI.AnimatedSprite(cscrocTextureArray);
+  sprite.anchor.set(0.5);
+  sprite.x = referenceSprite.x + referenceSprite.width / 2;
+  sprite.y = referenceSprite.y + referenceSprite.height / 2;
+  sprite.vx = Math.random() * 4 - 2;
+  if (sprite.vx < 0) {
+    sprite.scale.x = -1;
+  }
+  sprite.vy = -1.0;
+  sprite.interactive = false;
+  sprite.play();
+  sprite.animationSpeed = 0.16;
+
+  return {
+    sprite: sprite
+  };
+}
+
+function bird(referenceSprite) {
+  var sprite = new PIXI.AnimatedSprite(birdTextureArray);
+  sprite.anchor.set(0.5);
+  sprite.x = referenceSprite.x + referenceSprite.width / 2;
+  sprite.y = referenceSprite.y + referenceSprite.height / 2;
+  sprite.vx = (Math.random() > 0.5 ? -1 : 1) * 3;
+  if (sprite.vx < 0) {
+    sprite.scale.x = -1;
+  }
+  sprite.vy = -2;
+  sprite.interactive = false;
+  sprite.play();
+  sprite.animationSpeed = 0.18;
+
+  return {
+    sprite: sprite
+  };
+}
+
+function setupShop() {
+  shopbutton = new PIXI.Sprite(PIXI.Texture.from(icons[1]));
+  shopclose = new PIXI.Sprite(PIXI.Texture.from(icons[2]));
+
+  function onButtonOver() {
+    this.tint = 0xFFFF00;
+  }
+  function onButtonOut() {
+    this.tint = 0xFFFFFF;
+  }
+
+  shopbutton.anchor.set(1);
+  shopbutton.interactive = true;
+  shopbutton.buttonMode = true;
+
+  shopbutton
+    .on('pointerdown', shop)
+    //.on('pointerup', onButtonUp)
+    //.on('pointerupoutside', onButtonUp)
+    .on('pointerover', onButtonOver)
+    .on('pointerout', onButtonOut);
+
+  shopclose.rotation = Math.PI / 4;
+  shopclose.zIndex = 3;
+  shopclose.anchor.set(0.5);
+  shopclose.interactive = true;
+  shopclose.buttonMode = true;
+  shopclose.on('pointerdown', () => {
+    shopcontainer.visible = false;
+  });
+
+  shopcontainer = new PIXI.Container();
+  shopcontainer.visible = false;
+  shopcontainer.zIndex = 2;
+
+  shopbg = new PIXI.Sprite(PIXI.Texture.WHITE);
+  shopbg.tint = 0x515151;
+  shopbg.alpha = 0.8;
+
+  let items = [
+    { name: "Crocnosa", price: 75, sprite: icons[0], tint: 0xE74C3C }
+  ];
+
+  shopitems = [];
+  items.forEach((i) => {
+    let sprite = new PIXI.Sprite(PIXI.Texture.from(i.sprite));
+    sprite.tint = i.tint;
+    sprite.zIndex = 3;
+    console.log(PIXI.BitmapFont.ASCII);
+    PIXI.BitmapFont.from("ShopFont", {
+      fill: "#000000",
+      fontSize: 20,
+      fontWeight: 'bold',
+    }, { chars: PIXI.BitmapFont.ASCII });
+    let text = new PIXI.BitmapText(
+      i.name + "\n$" + i.price.toString(), {
+      fontName: "ShopFont",
+    }
+    );
+    text.zIndex = 3;
+    text.anchor.set(0.5);
+
+    sprite.interactive = true;
+    sprite.buttonMode = true;
+    function onClick() {
+      if (score < i.price) return;
+      score = score - i.price;
+      this.tint = 0x404040;
+      this.interactive = false;
+      powers[i.name] = true;
+      setScore();
+    }
+    sprite.on('pointerdown', onClick);
+
+    shopitems.push({ sprite: sprite, text: text, name: i.name });
+    shopcontainer.addChild(sprite);
+    shopcontainer.addChild(text);
+  });
+
+  shopcontainer.addChild(shopclose);
+  shopcontainer.addChild(shopbg);
+}
+
+function shop() {
+  shopcontainer.visible = true;
+}
+
 function resizeElements() {
+  // Perform all actions that require the screen size (place things...)
   far.width = app.screen.width;
   far.height = app.screen.height;
   scoreboard.position.set(app.screen.width - 10, app.screen.height - 10);
+  shopbutton.position.set(app.screen.width - 4, app.screen.height - 50);
+  // Resize shop
+  if (app.screen.height > 400 && app.screen.width > 800) {
+    shopbg.height = 400;
+    shopbg.width = 800;
+  } else {
+    shopbg.width = app.screen.width - 40;
+    shopbg.height = app.screen.height - 40;
+  }
+  shopbg.position.set(
+    (app.screen.width / shopcontainer.scale.x - shopbg.width) / 2,
+    (app.screen.height / shopcontainer.scale.y - shopbg.height) / 2
+  );
+  shopclose.position.set(
+    shopbg.position.x + shopbg.width,
+    shopbg.position.y
+  );
+  // Resize shop items
+  let side = Math.floor(shopbg.width / 4);
+  let nbw = Math.min(Math.max(Math.floor(shopbg.width / side) - 1, 1), 4);
+  let padw = Math.floor((shopbg.width % side) / (nbw + 1));
+  let i = 0;
+  shopitems.forEach((e) => {
+    e.sprite.height = Math.min(side, e.sprite.height / e.sprite.width * side);
+    e.sprite.width = side;
+    e.sprite.position.set(
+      shopbg.position.x + padw * (i % nbw + 1) + side * i,
+      shopbg.position.y + padw * (Math.floor(i / nbw) + 1) + side * Math.floor(i / nbw)
+    );
+    e.text.position.set(
+      e.sprite.x + e.sprite.width / 2,
+      e.sprite.y + e.sprite.height + 2
+    );
+    i++;
+  });
 }
 
 function setup() {
@@ -71,20 +342,18 @@ function setup() {
   far.position.y = 0;
   app.stage.addChild(far);
 
-  for (let i = 0; i < balloonImages.length; i++) {
-    let texture = PIXI.Texture.from(balloonImages[i]);
-    balloonTextureArray.push(texture);
-  }
-
-  for (let i = 0; i < birdImages.length; i++) {
-    let texture = PIXI.Texture.from(birdImages[i]);
-    birdTextureArray.push(texture);
-  }
-
-  for (let i = 0; i < thomasImages.length; i++) {
-    let texture = PIXI.Texture.from(thomasImages[i]);
-    thomasTextureArray.push(texture);
-  }
+  balloonImages.forEach((i) => {
+    balloonTextureArray.push(PIXI.Texture.from(i));
+  });
+  birdImages.forEach((i) => {
+    birdTextureArray.push(PIXI.Texture.from(i));
+  });
+  thomasImages.forEach((i) => {
+    thomasTextureArray.push(PIXI.Texture.from(i));
+  });
+  cscrocImages.forEach((i) => {
+    cscrocTextureArray.push(PIXI.Texture.from(i));
+  });
 
   let style = new PIXI.TextStyle({
     fontFamily: "Arial",
@@ -111,10 +380,14 @@ function setup() {
 
   // Now add the balloons
   for (let i = 0; i < totalBalloons; i++) {
-    let balloon = window.balloon();
-    balloons.push(balloon);
-    app.stage.addChild(balloon.sprite);
+    let b = balloon();
+    balloons.push(b);
+    app.stage.addChild(b.sprite);
   }
+
+  setupShop();
+  app.stage.addChild(shopbutton);
+  app.stage.addChild(shopcontainer);
 
   // Call the resize util (everything related to the size of the screen)
   app.renderer.on('resize', resizeElements);
@@ -156,127 +429,16 @@ function play(delta) {
     }
   });
 
-  for (var i = 0; i < birds.length; i++) {
-    var bird = birds[i];
-    bird.sprite.x += (1 + delta) * bird.sprite.vx;
-    bird.sprite.y += (1 + delta) * bird.sprite.vy;
-    if (bird.sprite.y < -bird.sprite.height) {
-      app.stage.removeChild(bird);
-      birds.splice(i, 1);
+  for (var i = 0; i < flyingObjects.length; i++) {
+    var obj = flyingObjects[i];
+    obj.sprite.x += (1 + delta) * obj.sprite.vx;
+    obj.sprite.y += (1 + delta) * obj.sprite.vy;
+    if (obj.sprite.y < -obj.sprite.height) {
+      app.stage.removeChild(obj);
+      flyingObjects.splice(i, 1);
       i--;
     }
   }
-
-  for (var i = 0; i < thomases.length; i++) {
-    var thomas = thomases[i];
-    thomas.sprite.x += (1 + delta) * thomas.sprite.vx;
-    thomas.sprite.y += (1 + delta) * thomas.sprite.vy;
-    if (thomas.sprite.y < -thomas.sprite.height) {
-      app.stage.removeChild(thomas);
-      thomases.splice(i, 1);
-      i--;
-    }
-  }
-}
-
-function balloon() {
-  function onClick(e) {
-    if (that.popped === false) {
-      that.sprite.vy = -0.8;
-      that.popped = true;
-      that.sprite.interactive = false;
-      sprite.gotoAndPlay(1);
-      score += 1;
-
-      if (Math.random() < (1 / 6)) {
-        var bird = window.bird(that.sprite);
-        birds.push(bird)
-        var index = app.stage.getChildIndex(sprite);
-        app.stage.addChildAt(bird.sprite, index);
-        score += 1;
-      }
-
-      if (Math.random() < (1 / 8)) {
-        var thomas = window.thomas(that.sprite);
-        thomases.push(thomas)
-        var index = app.stage.getChildIndex(sprite);
-        app.stage.addChildAt(thomas.sprite, index);
-        score += 3;
-      }
-      setScore();
-    }
-  }
-
-  function resetBalloon() {
-    that.sprite.visible = false;
-    that.sprite.vy = -0.8;
-    that.rotation = Math.atan(-that.vx / that.vy);
-    that.sprite.y -= Math.random() * (app.screen.height / 2) + (app.screen.height / 2);
-    that.popped = false;
-    that.sprite.gotoAndStop(0);
-  }
-
-  var sprite = new PIXI.AnimatedSprite(balloonTextureArray);
-  sprite.x = Math.random() * app.screen.width - (balloonFrame.x + balloonWidth / 2);
-  sprite.y = Math.random() * (app.screen.height + 5);
-  var wind = Math.random() * 0.3 - 0.15;
-  sprite.vx = wind / 2 + Math.random() * wind; // wut
-  sprite.vy = -0.8;
-  sprite.rotation = Math.atan(-sprite.vx / sprite.vy); // orient the balloon to where it's heading
-  sprite.interactive = true;
-  sprite.on('pointerdown', onClick);
-  sprite.hitArea = balloonHitArea;
-  sprite.animationSpeed = Math.random() * 0.1 + 0.25;
-  sprite.gotoAndStop(0);
-  sprite.onLoop = resetBalloon;
-
-  var that = {
-    sprite: sprite,
-    popped: false
-  };
-  return that;
-}
-
-function thomas(referenceSprite) {
-  var sprite = new PIXI.AnimatedSprite(thomasTextureArray);
-  sprite.anchor.y = 0.5;
-  sprite.anchor.x = 0.5;
-  sprite.x = referenceSprite.x + referenceSprite.width / 2;
-  sprite.y = referenceSprite.y + referenceSprite.height / 2;
-  sprite.vx = Math.random() * 4 - 2;
-  if (sprite.vx < 0) {
-    sprite.scale.x = -1;
-  }
-  sprite.vy = -1.5;
-  sprite.interactive = false;
-  sprite.play();
-  sprite.animationSpeed = 0.18;
-
-  var that = {
-    sprite: sprite
-  };
-  return that;
-}
-
-function bird(referenceSprite) {
-  var sprite = new PIXI.AnimatedSprite(birdTextureArray);
-  sprite.anchor.y = 0.5;
-  sprite.anchor.x = 0.5;
-  sprite.x = referenceSprite.x + referenceSprite.width / 2;
-  sprite.y = referenceSprite.y + referenceSprite.height / 2;
-  sprite.vx = (Math.random() > 0.5 ? -1 : 1) * 3;
-  if (sprite.vx < 0) {
-    sprite.scale.x = -1;
-  }
-  sprite.vy = -2;
-  sprite.interactive = false;
-  sprite.play();
-  sprite.animationSpeed = 0.18;
-
-  var that = {
-    sprite: sprite
-  };
-  return that;
 }
 
 /*
