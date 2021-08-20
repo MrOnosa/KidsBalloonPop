@@ -7,6 +7,7 @@ A simple balloon popping game. Click the balloons. Press the left or right arrow
 
 Birds provided by [LeeZH from OpenGameArt.org](https://opengameart.org/content/white-birds).
 Thomas provided by [Artiks](https://twitter.com/Artipartym8).
+Various icons from [game-icons.net](https://game-icons.net)
 
 #### Run locally
 
