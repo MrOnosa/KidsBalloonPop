@@ -35,10 +35,25 @@ var cscrocImages = [
   "./images/animations/cscroc/frame_7_delay-0.02s.png",
   "./images/animations/cscroc/frame_8_delay-0.02s.png"
 ];
+var artiksImages = [
+  "./images/animations/artiks/frame_00_delay-0.09s.png",
+  "./images/animations/artiks/frame_01_delay-0.09s.png",
+  "./images/animations/artiks/frame_02_delay-0.09s.png",
+  "./images/animations/artiks/frame_03_delay-0.09s.png",
+  "./images/animations/artiks/frame_04_delay-0.09s.png",
+  "./images/animations/artiks/frame_05_delay-0.09s.png",
+  "./images/animations/artiks/frame_06_delay-0.09s.png",
+  "./images/animations/artiks/frame_07_delay-0.09s.png",
+  "./images/animations/artiks/frame_08_delay-0.09s.png",
+  "./images/animations/artiks/frame_09_delay-0.09s.png",
+  "./images/animations/artiks/frame_10_delay-0.09s.png",
+  "./images/animations/artiks/frame_11_delay-0.09s.png",
+];
 var icons = [
   "./images/icons/heart.png",
   "./images/icons/cart.png",
-  "./images/icons/plus.png"
+  "./images/icons/plus.png",
+  "./images/icons/drill.png",
 ];
 var far, scoreboard, shopbutton, shopcontainer, shopbg, shopitems, shopclose;
 var backgroundUrl = "./images/bluebackground.png";
@@ -52,6 +67,7 @@ var balloonHitArea = new PIXI.Ellipse(balloonFrame.x + balloonCenter.x, balloonF
 var birdTextureArray = [];
 var thomasTextureArray = [];
 var cscrocTextureArray = [];
+var artiksTextureArray = [];
 
 // global variables
 var wind = 0;
@@ -71,6 +87,26 @@ var app = new PIXI.Application({
 });
 document.body.appendChild(app.view);
 
+/* Loading screen */
+var load_progress = 0;
+var total_files = [
+  balloonImages,
+  [backgroundUrl],
+  birdImages,
+  thomasImages,
+  icons,
+  cscrocImages,
+].map((i) => i.length).reduce((a, b) => a + b, 0);
+PIXI.Loader.shared.onProgress.add(() => {
+  load_progress += 1;
+  document.getElementById("loadingstatus").value = load_progress / total_files * 100;
+});
+PIXI.Loader.shared.onComplete.add(() => {
+  let elem = document.getElementById("loading");
+  elem.parentNode.removeChild(elem);
+});
+
+/* Load files */
 PIXI.Loader.shared
   .add(balloonImages)
   .add(backgroundUrl)
@@ -91,21 +127,28 @@ function balloon() {
       score += 1;
 
       if (Math.random() < (1 / 6)) {
-        var b = bird(that.sprite);
+        var b = createSprite(that.sprite, birdTextureArray, 0.18, Math.random() * 4 - 2, -2)
         flyingObjects.push(b)
         app.stage.addChildAt(b.sprite, app.stage.getChildIndex(sprite));
         score += 1;
       }
       if (Math.random() < (1 / 8)) {
-        var t = thomas(that.sprite);
+        var t = createSprite(that.sprite, thomasTextureArray, 0.18, Math.random() * 6 - 3, -1.5);
         flyingObjects.push(t);
         app.stage.addChildAt(t.sprite, app.stage.getChildIndex(sprite));
         score += 3;
       }
+      /* CS */
       if (powers.Crocnosa && Math.random() < (1 / 6)) {
-        var t = cscroc(that.sprite);
+        var t = createSprite(that.sprite, cscrocTextureArray, 0.16, Math.random() * 4 - 2, -1.0);
         flyingObjects.push(t);
         app.stage.addChildAt(t.sprite, app.stage.getChildIndex(sprite));
+        score += 15;
+      }
+      if (powers.Artiks && Math.random() < (1 / 6)) {
+        var a = createSprite(that.sprite, artiksTextureArray, 0.09, Math.random() * 6 - 3, -3.0, reversed = true);
+        flyingObjects.push(a);
+        app.stage.addChildAt(a.sprite, app.stage.getChildIndex(sprite));
         score += 15;
       }
       setScore();
@@ -142,57 +185,22 @@ function balloon() {
   return that;
 }
 
-function thomas(referenceSprite) {
-  var sprite = new PIXI.AnimatedSprite(thomasTextureArray);
+function createSprite(referenceSprite, textureArray, animationSpeed, vx, vy, reversed = false) {
+  var sprite = new PIXI.AnimatedSprite(textureArray);
   sprite.anchor.set(0.5);
   sprite.x = referenceSprite.x + referenceSprite.width / 2;
   sprite.y = referenceSprite.y + referenceSprite.height / 2;
-  sprite.vx = Math.random() * 4 - 2;
+  sprite.vx = vx;
   if (sprite.vx < 0) {
     sprite.scale.x = -1;
   }
-  sprite.vy = -1.5;
-  sprite.interactive = false;
-  sprite.play();
-  sprite.animationSpeed = 0.18;
-
-  return {
-    sprite: sprite
-  };
-}
-
-function cscroc(referenceSprite) {
-  var sprite = new PIXI.AnimatedSprite(cscrocTextureArray);
-  sprite.anchor.set(0.5);
-  sprite.x = referenceSprite.x + referenceSprite.width / 2;
-  sprite.y = referenceSprite.y + referenceSprite.height / 2;
-  sprite.vx = Math.random() * 4 - 2;
-  if (sprite.vx < 0) {
-    sprite.scale.x = -1;
+  if (reversed) {
+    sprite.scale.x = -sprite.scale.x;
   }
-  sprite.vy = -1.0;
+  sprite.vy = vy;
   sprite.interactive = false;
   sprite.play();
-  sprite.animationSpeed = 0.16;
-
-  return {
-    sprite: sprite
-  };
-}
-
-function bird(referenceSprite) {
-  var sprite = new PIXI.AnimatedSprite(birdTextureArray);
-  sprite.anchor.set(0.5);
-  sprite.x = referenceSprite.x + referenceSprite.width / 2;
-  sprite.y = referenceSprite.y + referenceSprite.height / 2;
-  sprite.vx = (Math.random() > 0.5 ? -1 : 1) * 3;
-  if (sprite.vx < 0) {
-    sprite.scale.x = -1;
-  }
-  sprite.vy = -2;
-  sprite.interactive = false;
-  sprite.play();
-  sprite.animationSpeed = 0.18;
+  sprite.animationSpeed = animationSpeed;
 
   return {
     sprite: sprite
@@ -239,7 +247,8 @@ function setupShop() {
   shopbg.alpha = 0.8;
 
   let items = [
-    { name: "Crocnosa", price: 75, sprite: icons[0], tint: 0xE74C3C }
+    { name: "Crocnosa", price: 75, sprite: icons[0], tint: 0xE74C3C },
+    { name: "Artiks", price: 75, sprite: icons[3], tint: 0x435C9E }
   ];
 
   shopitems = [];
@@ -247,7 +256,6 @@ function setupShop() {
     let sprite = new PIXI.Sprite(PIXI.Texture.from(i.sprite));
     sprite.tint = i.tint;
     sprite.zIndex = 3;
-    console.log(PIXI.BitmapFont.ASCII);
     PIXI.BitmapFont.from("ShopFont", {
       fill: "#000000",
       fontSize: 20,
@@ -353,6 +361,9 @@ function setup() {
   });
   cscrocImages.forEach((i) => {
     cscrocTextureArray.push(PIXI.Texture.from(i));
+  });
+  artiksImages.forEach((i) => {
+    artiksTextureArray.push(PIXI.Texture.from(i));
   });
 
   let style = new PIXI.TextStyle({
