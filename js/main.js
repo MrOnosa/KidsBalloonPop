@@ -7,6 +7,9 @@ PIXI.settings.SORTABLE_CHILDREN = true;
 
 var balloons = [];
 var flyingObjects = [];
+var scoreChangeCooldown = 0; //How long until we dequeue the next score change
+var scoreChangeQueue = []; //A queue of score changes to be displayed
+var scoreChangeSprites = []; //The displayed score changes
 var balloonImages = [
   "./images/animations/balloon/frame_0_delay-0.1s.png",
   "./images/animations/balloon/frame_1_delay-0.1s.png",
@@ -131,41 +134,46 @@ function balloon() {
       that.popped = true;
       that.sprite.interactive = false;
       sprite.gotoAndPlay(1);
-      score += 1;
+
+      scoreChangeQueue.push(1);
 
       if (Math.random() < (1 / 6)) {
         var b = createSprite(that.sprite, birdTextureArray, 0.18, Math.random() * 4 - 2, -2)
         flyingObjects.push(b)
         app.stage.addChildAt(b.sprite, app.stage.getChildIndex(sprite));
-        score += 1;
+
+        scoreChangeQueue.push(1);
       }
       if (Math.random() < (1 / 8)) {
         var t = createSprite(that.sprite, thomasTextureArray, 0.18, Math.random() * 6 - 3, -1.5);
         flyingObjects.push(t);
         app.stage.addChildAt(t.sprite, app.stage.getChildIndex(sprite));
-        score += 3;
+
+        scoreChangeQueue.push(3);
       }
       /* CS */
       if (powers.Crocnosa && Math.random() < (1 / 6)) {
         var t = createSprite(that.sprite, cscrocTextureArray, 0.16, Math.random() * 4 - 2, -1.0);
         flyingObjects.push(t);
         app.stage.addChildAt(t.sprite, app.stage.getChildIndex(sprite));
-        score += 15;
+
+        scoreChangeQueue.push(15);
       }
       if (powers.Artiks && Math.random() < (1 / 6)) {
         var a = createSprite(that.sprite, artiksTextureArray, 0.09, Math.random() * 6 - 3, -3.0, reversed = true);
         flyingObjects.push(a);
         app.stage.addChildAt(a.sprite, app.stage.getChildIndex(sprite));
-        score += 15;
+
+        scoreChangeQueue.push(15);
       }
       /* OCs */
       if (powers.Mantmant && Math.random() < (1 / 6)) {
         let a = createSprite(that.sprite, mantmantTextureArray, 0.09, Math.random() * 2 - 1, -1, reversed = true);
         flyingObjects.push(a);
         app.stage.addChildAt(a.sprite, app.stage.getChildIndex(sprite));
-        score += 15;
+
+        scoreChangeQueue.push(15);
       }
-      setScore();
     }
   }
 
@@ -314,7 +322,7 @@ function resizeElements() {
   far.width = app.screen.width;
   far.height = app.screen.height;
   scoreboard.position.set(app.screen.width - 10, app.screen.height - 10);
-  shopbutton.position.set(app.screen.width - 4, app.screen.height - 50);
+  shopbutton.position.set(app.screen.width - 4, 50);
   // Resize shop
   if (app.screen.height > 400 && app.screen.width > 800) {
     shopbg.height = 400;
@@ -462,6 +470,52 @@ function play(delta) {
       i--;
     }
   }
+
+  //Score Change Indicators
+  scoreChangeCooldown -= delta;
+  if(scoreChangeCooldown <= 0){
+    scoreChangeCooldown = 10;
+    if(scoreChangeQueue.length > 0){
+      //Dequeue
+      let scoreChange = scoreChangeQueue.slice(0,1)[0];
+      scoreChangeQueue = scoreChangeQueue.slice(1);
+
+      //Change score      
+      score += scoreChange;
+      setScore();
+      
+      let style = new PIXI.TextStyle({
+        fontFamily: "Arial",
+        fontSize: 36,
+        fill: "gold",
+        dropShadow: true,
+        dropShadowColor: "#000000",
+        dropShadowBlur: 2,
+        dropShadowAngle: Math.PI / 6,
+        dropShadowDistance: 3,
+      });
+      var scoreChangeSprite = new PIXI.Text("", style);
+      scoreChangeSprite.zIndex = 2;
+      scoreChangeSprite.anchor.x = 1;
+      scoreChangeSprite.anchor.y = 1;
+      scoreChangeSprite.vy = -0.8;
+      scoreChangeSprite.text = "+"+scoreChange;      
+      scoreChangeSprite.position.set(scoreboard.x, scoreboard.y - 22);
+      app.stage.addChild(scoreChangeSprite);
+      scoreChangeSprites.push(scoreChangeSprite);
+    }
+  }
+
+  for (var i = 0; i < scoreChangeSprites.length; i++) {
+    var obj = scoreChangeSprites[i];    
+    obj.position.y += (1 + delta) * obj.vy;
+    if (obj.position.y < (scoreboard.y - 75)) {
+      app.stage.removeChild(obj);
+      scoreChangeSprites.splice(i, 1);
+      i--;
+    }
+  }
+
 }
 
 /*
