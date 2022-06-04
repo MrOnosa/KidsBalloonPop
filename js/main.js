@@ -49,11 +49,17 @@ var artiksImages = [
   "./images/animations/artiks/frame_10_delay-0.09s.png",
   "./images/animations/artiks/frame_11_delay-0.09s.png",
 ];
+var mantmantImages = [
+  "./images/animations/mantmant/mantmant1.png",
+  "./images/animations/mantmant/mantmant2.png",
+  "./images/animations/mantmant/mantmant3.png",
+];
 var icons = [
   "./images/icons/heart.png",
   "./images/icons/cart.png",
   "./images/icons/plus.png",
   "./images/icons/drill.png",
+  "./images/icons/mantmant.png",
 ];
 var far, scoreboard, shopbutton, shopcontainer, shopbg, shopitems, shopclose;
 var backgroundUrl = "./images/bluebackground.png";
@@ -68,6 +74,7 @@ var birdTextureArray = [];
 var thomasTextureArray = [];
 var cscrocTextureArray = [];
 var artiksTextureArray = [];
+var mantmantTextureArray = [];
 
 // global variables
 var wind = 0;
@@ -147,6 +154,13 @@ function balloon() {
       }
       if (powers.Artiks && Math.random() < (1 / 6)) {
         var a = createSprite(that.sprite, artiksTextureArray, 0.09, Math.random() * 6 - 3, -3.0, reversed = true);
+        flyingObjects.push(a);
+        app.stage.addChildAt(a.sprite, app.stage.getChildIndex(sprite));
+        score += 15;
+      }
+      /* OCs */
+      if (powers.Mantmant && Math.random() < (1 / 6)) {
+        let a = createSprite(that.sprite, mantmantTextureArray, 0.09, Math.random() * 2 - 1, -1, reversed = true);
         flyingObjects.push(a);
         app.stage.addChildAt(a.sprite, app.stage.getChildIndex(sprite));
         score += 15;
@@ -248,7 +262,8 @@ function setupShop() {
 
   let items = [
     { name: "Crocnosa", price: 75, sprite: icons[0], tint: 0xE74C3C },
-    { name: "Artiks", price: 75, sprite: icons[3], tint: 0x435C9E }
+    { name: "Artiks", price: 75, sprite: icons[3], tint: 0x435C9E },
+    { name: "Mantmant", price: 75, sprite: icons[4], tint: 0xAAAAAA }
   ];
 
   shopitems = [];
@@ -337,12 +352,6 @@ function resizeElements() {
 }
 
 function setup() {
-  // var circle = new PIXI.Graphics();
-  // circle.lineStyle(4, 0xFF3300, 1);
-  // circle.beginFill(0xFFFFFF);
-  // circle.drawCircle(180, 180, 183);
-  // circle.endFill();
-  // app.stage.addChild(circle);
 
   let farTexture = PIXI.Texture.from(backgroundUrl);
   far = new PIXI.TilingSprite(farTexture, 250, 250);
@@ -364,6 +373,9 @@ function setup() {
   });
   artiksImages.forEach((i) => {
     artiksTextureArray.push(PIXI.Texture.from(i));
+  });
+  mantmantImages.forEach((i) => {
+    mantmantTextureArray.push(PIXI.Texture.from(i));
   });
 
   let style = new PIXI.TextStyle({
